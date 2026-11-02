@@ -1,5 +1,26 @@
+# IDEs & Editors (PyCharm / VSCode)
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# Environments
+.env
 .venv/
+env/
+venv/
+
+# Python
 __pycache__/
 *.py[cod]
-.env
-db.sqlite3
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS (Windows / Mac / Linux)
+Thumbs.db
+Desktop.ini
+.DS_Store
