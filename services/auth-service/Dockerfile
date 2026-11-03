@@ -17,7 +17,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
+COPY . .
+
 EXPOSE 8001
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3"]
-
+CMD ["sh", "-c", "python manage.py makemigrations accounts && python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8001 --workers 3"]

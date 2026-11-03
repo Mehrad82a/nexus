@@ -24,3 +24,8 @@ htmlcov/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+
+# Other
+make-snapshot.md
+project_snapshot.txt
