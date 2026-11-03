@@ -4,11 +4,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("AUTH_SECRET_KEY")
+SECRET_KEY = os.environ.get("AUTH_SECRET_KEY", "django-insecure-fallback-auth-key")
 
 DEBUG = os.environ.get("AUTH_DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = os.environ.get("AUTH_ALLOWED_HOSTS").split(",")
+ALLOWED_HOSTS = os.environ.get("AUTH_ALLOWED_HOSTS", "*").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -119,8 +119,8 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
+    "SIGNING_KEY": os.environ.get("JWT_SECRET_KEY", SECRET_KEY),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
-    "USER_ID_claim": "user_id",
+    "USER_ID_CLAIM": "user_id",
 }
