@@ -4,7 +4,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("AUTH_SECRET_KEY")
+SECRET_KEY = os.environ.get("AUTH_SECRET_KEY", "django-insecure-fallback-auth-key")
 
 DEBUG = os.environ.get("AUTH_DEBUG", "True").lower() == "true"
 

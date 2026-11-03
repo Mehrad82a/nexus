@@ -109,6 +109,8 @@ services:
       redis:
         condition: service_healthy
 
+    volumes:
+      - ./services/auth-service:/app
     networks:
       - nexus_network
 
