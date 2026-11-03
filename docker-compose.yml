@@ -27,6 +27,7 @@ services:
       retries: 5
 
 
+
   redis:
     image: redis:7-alpine
     container_name: ${REDIS_CONTAINER_NAME}
@@ -47,6 +48,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
 
 
   rabbitmq:
@@ -74,10 +76,49 @@ services:
       retries: 5
 
 
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+
+    container_name: ${AUTH_CONTAINER_NAME}
+    restart: unless-stopped
+
+    environment:
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY}
+      AUTH_DEBUG: ${AUTH_DEBUG}
+      AUTH_ALLOWED_HOSTS: ${AUTH_ALLOWED_HOSTS}
+      AUTH_DB_NAME: ${AUTH_DB_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+
+    ports:
+      - "${AUTH_PORT}:8001"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
+
 
 networks:
   nexus_network:
