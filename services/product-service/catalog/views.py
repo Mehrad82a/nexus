@@ -80,9 +80,7 @@ class ProductDetailAPIView(APIView):
         product = get_product_by_slug(slug=slug)
         if not product:
             return Response(
-                {
-                    'detail': 'Product not found',
-                },
+                {'detail': 'Product not found'},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -107,11 +105,9 @@ class VariantSnapshotAPIView(APIView):
     def get(self, request: Request, variant_id) -> Response:
         variant = get_variant_with_inventory(variant_id=variant_id)
 
-        if not variant_id:
+        if not variant:
             return Response(
-                {
-                    'detail': 'Variant not found',
-                },
+                {'detail': 'Variant not found'},
                 status=status.HTTP_404_NOT_FOUND,
             )
 

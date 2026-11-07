@@ -22,7 +22,7 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
 class ProductVariantOutputSerializer(serializers.ModelSerializer):
-    effect_price = serializers.DecimalField(max_digits=12, decimal_places=2, required=True)
+    effective_price = serializers.DecimalField(max_digits=12, decimal_places=2, required=True)
     available_quantity = serializers.IntegerField(source='inventory.available_quantity', required=True)
 
     class Meta:
@@ -34,7 +34,7 @@ class ProductVariantOutputSerializer(serializers.ModelSerializer):
 class ProductOutputSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     brand = BrandSerializer(read_only=True)
-    variant = ProductVariantOutputSerializer(many=True, read_only=True)
+    variants = ProductVariantOutputSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -46,7 +46,7 @@ class VariantCreateInputSerializer(serializers.Serializer):
     sku = serializers.CharField(max_length=100)
     attributes = serializers.DictField(required=False, default=dict)
     price_override = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, allow_null=True, default=None)
-    initial_stack = serializers.IntegerField(min_value=0, default=0)
+    initial_stock = serializers.IntegerField(min_value=0, default=0)
 
 
 

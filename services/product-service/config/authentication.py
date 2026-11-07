@@ -42,7 +42,7 @@ class IsAdminRoleOrReadOnly(permissions.BasePermission):
 
         return bool(
             request.user
-            and request.user.is_authenticated()
+            and request.user.is_authenticated
             and getattr(request.user, 'role', None) == 'ADMIN'
         )
 
