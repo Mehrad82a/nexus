@@ -75,3 +75,125 @@ class CatalogService:
         invalidate_product_cache(product.slug)
         return product
 
+
+
+
+class InventoryService:
+    """
+    Handles concurrency-safe stock reservations, confirmations, and rollbacks
+    using PostgreSQL row-level locking (SELECT ... FOR UPDATE).
+    """
+
+    @staticmethod
+    @transaction.atomic
+    def reserve_stock_for_order(
+        *,
+        order_id: UUID,
+        items: List[Dict[str, Any]],
+    ) -> List[InventoryReservation]:
+        """
+        Reserves stock for all items in an order.
+        """
+
+        existing = list(InventoryReservation.objects.filter(order_id=order_id))
+        if existing:
+            return existing
+
+        variant_ids = sorted([UUID(str(item['variant_id'])) for item in items])
+
+        inventories = {
+            inv.variant_id: inv for inv in Inventory.objects.select_for_update()
+            .select_related('variant__product')
+            .filter(variant_id__in=variant_ids)
+        }
+
+        reservations: List[InventoryReservation] = []
+
+        for item in items:
+            v_id = UUID(str(item['variant_id']))
+            qty = int(item['quantity'])
+
+            inventory: Optional[Inventory] = inventories.get(v_id)
+            if not inventory:
+                raise NotFound(f'Inventory for variant {v_id} not found.')
+
+            if inventory.available_quantity < qty:
+                raise ValidationError(
+                    {
+                        'detail': 'INSUFFICIENT_STOCK',
+                        'variant_id': str(v_id),
+                        'available': inventory.available_quantity,
+                        'requested': qty,
+                    }
+                )
+
+            inventory.reserved_quantity += qty
+            inventory.save(update_fields=['reserved_quantity', 'updated_at'])
+
+            reservation = InventoryReservation.objects.create(
+                order_id=order_id,
+                variant_id=v_id,
+                quantity=qty,
+                status=InventoryReservation.Status.RESERVED,
+            )
+
+            reservations.append(reservation)
+            invalidate_product_cache(inventory.variant.product.slug)
+
+        return reservations
+
+
+
+    @staticmethod
+    @transaction.atomic
+    def confirm_order_stock(*, order_id: UUID) -> None:
+        """
+        Called when payment.succeeded event arrives: permanently deducts stock.
+        """
+
+        reservations = list(
+            InventoryReservation.objects.select_for_update()
+            .select_related('variant__product')
+            .filter(order_id=order_id, status=InventoryReservation.Status.RESERVED)
+        )
+
+        for res in reservations:
+            inv = Inventory.objects.select_for_update().get(variant_id=res.variant_id)
+            inv.total_quantity = max(0, inv.total_quantity - res.quantity)
+            inv.reserved_quantity = max(0, inv.reserved_quantity - res.quantity)
+            inv.save(update_fields=['total_quantity', 'reserved_quantity', 'updated_at'])
+
+            res.status = InventoryReservation.Status.CONFIRMED
+            res.save(update_fields=['status'])
+            invalidate_product_cache(res.variant.product.slug)
+
+
+
+    @staticmethod
+    @transaction.atomic
+    def release_order_stock(*, order_id: UUID) -> None:
+        """
+        Called when payment.failed or order.cancelled event arrives: releases reserved stock.
+        """
+
+        reservations = list(
+            InventoryReservation.objects.select_for_update()
+            .select_related('variant__product')
+            .filter(order_id=order_id, status=InventoryReservation.Status.RESERVED)
+
+        )
+
+        for res in reservations:
+            inv = Inventory.objects.select_for_update().get(variant_id=res.variant_id)
+            inv.reserved_quantity = max(0, inv.reserved_quantity - res.quantity)
+            inv.save(update_fields=['reserved_quantity', 'updated_at'])
+
+            res.status = InventoryReservation.Status.RELEASED
+            res.save(update_fields=['status'])
+            invalidate_product_cache(res.variant.product.slug)
+
+
+
+
+
+
