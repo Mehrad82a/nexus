@@ -75,7 +75,7 @@ class EventProducer:
                 ),
             )
 
-        except (RabbitMQConnection, pika.exceptions.AMQPError, OSError) as exc:
+        except (RabbitMQConnectionError, pika.exceptions.AMQPError, OSError) as exc:
             logger.exception(
                 '[EventProducer] Event publish failed: '
                 f'event_id=<{event_id}> | event_type=<{event_type}>'
