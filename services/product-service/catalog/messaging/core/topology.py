@@ -1,7 +1,7 @@
 from pika.adapters.blocking_connection import BlockingChannel
 
-from catalog.messaging.config import MessagingSettings, messaging_settings
-from catalog.messaging.logger import get_logger
+from catalog.messaging.core.config import MessagingSettings, messaging_settings
+from catalog.messaging.core.logger import get_logger
 
 logger = get_logger(__name__)
 
