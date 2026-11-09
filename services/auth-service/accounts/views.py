@@ -12,7 +12,7 @@ from accounts.serializers import (
     UserOutputSerializer,
 )
 
-from accounts.services import AuthService
+from accounts.service.services import AuthService
 
 
 

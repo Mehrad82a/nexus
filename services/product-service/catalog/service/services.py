@@ -12,7 +12,7 @@ from catalog.models import (
     Product,
     ProductVariant,
 )
-from catalog.selectors import invalidate_product_cache
+from catalog.service.selectors import invalidate_product_cache
 
 
 
