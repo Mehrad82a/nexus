@@ -102,7 +102,6 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
 }
 
-# Shared JWT Signing Key for verifying tokens issued by Auth Service
 SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": os.environ.get("JWT_SECRET_KEY", SECRET_KEY),
