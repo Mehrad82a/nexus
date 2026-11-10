@@ -10,7 +10,7 @@ class MessagingSettings:
     rabbitmq_port: int = field(default_factory=lambda: int(os.environ.get('RABBITMQ_PORT', '5672')))
     rabbitmq_user: str = field(default_factory=lambda: os.environ.get('RABBITMQ_DEFAULT_USER', 'nexus_mq'))
     rabbitmq_pass: str = field(
-        default_factory=lambda: os.environ.get('RABBITMQ_DEFAULT_PASS', 'rabbitmq_secret_password')
+        default_factory=lambda: os.environ.get('RABBITMQ_DEFAULT_PASS', 'admin_pass')
     )
     rabbitmq_virtual_host: str = field(default_factory=lambda: os.environ.get('RABBITMQ_VHOST', '/'))
 

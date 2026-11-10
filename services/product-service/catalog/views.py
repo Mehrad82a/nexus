@@ -7,7 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from catalog.selectors import (
+from catalog.service.selectors import (
     PRODUCT_DETAIL_CACHE_TTL,
     get_active_categories,
     get_all_brands,

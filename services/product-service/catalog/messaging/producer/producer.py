@@ -3,7 +3,6 @@ import time
 import uuid
 from collections.abc import Mapping
 from datetime import datetime, timezone
-from logging import exception
 
 import pika
 
