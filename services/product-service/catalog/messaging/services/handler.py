@@ -11,7 +11,7 @@ from catalog.messaging.services.exceptions import (
 )
 from catalog.messaging.core.logger import get_logger
 from catalog.messaging.producer.producer import EventProducer
-from catalog.services import InventoryService
+from catalog.service.services import InventoryService
 
 
 logger = get_logger(__name__)

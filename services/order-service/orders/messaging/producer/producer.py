@@ -48,7 +48,7 @@ class EventProducer:
             'event_id': event_id,
             'event_type': event_type.strip(),
             'timestamp': datetime.now(timezone.utc).isoformat(),
-            'source': 'product-service',
+            'source': 'order-service',
             'version': '1.0',
             'payload': dict(payload),
         }

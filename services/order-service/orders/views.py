@@ -22,7 +22,7 @@ class OrderListCreateAPIView(generics.ListCreateAPIView):
         return get_user_orders(user_id=UUID(str(self.request.user.id)))
 
     def create(self, request: Request, *args, **kwargs) -> Response:
-        data = request.data.cop() if isinstance(request.data, dict) else {}
+        data = request.data.copy() if isinstance(request.data, dict) else {}
         header_key = request.headers.get('Idempotency-Key')
         if header_key and 'idempotency_key' not in data:
             data['idempotency_key'] = header_key
