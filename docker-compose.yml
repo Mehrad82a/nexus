@@ -15,7 +15,8 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
+#      - ./scripts/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
+      - ./scripts/postgres/init-multi-db.sql:/docker-entrypoint-initdb.d/init-multi-db.sql:ro
 
     networks:
       - nexus_network
