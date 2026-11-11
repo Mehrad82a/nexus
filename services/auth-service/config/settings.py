@@ -62,7 +62,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("AUTH_DB_NAME", "nexus_auth_db"),
-        "USER": os.environ.get("POSTGRES_USER", "nexus_user"),
+        "USER": os.environ.get("POSTGRES_USER", "nexus_admin"),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "nexus_pass"),
         "HOST": os.environ.get("POSTGRES_HOST", "postgres"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
