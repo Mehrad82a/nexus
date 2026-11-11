@@ -7,7 +7,7 @@ from typing import Tuple
 class MessagingSettings:
     rabbitmq_host: str = field(default_factory=lambda: os.environ.get('RABBITMQ_HOST', 'rabbitmq'))
     rabbitmq_port: int = field(default_factory=lambda: int(os.environ.get('RABBITMQ_PORT', '5672')))
-    rabbitmq_user: str = field(default_factory=lambda: os.environ.get('RABBITMQ_DEFAULT_USER', 'nexus_mq'))
+    rabbitmq_user: str = field(default_factory=lambda: os.environ.get('RABBITMQ_DEFAULT_USER', 'admin_user'))
     rabbitmq_pass: str = field(
         default_factory=lambda: os.environ.get('RABBITMQ_DEFAULT_PASS', 'admin_pass')
     )
