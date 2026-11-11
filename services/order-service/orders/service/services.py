@@ -33,7 +33,7 @@ class OrderService:
 
         cleaned_key = idempotency_key.strip()
         if not cleaned_key:
-            raise ValidationError({{'idempotency_key': 'Idempotency key cannot be blank.'}})
+            raise ValidationError({'idempotency_key': 'Idempotency key cannot be blank.'})
 
         # Acquire Redis Distributed Lock per user + idempotency key to prevent race conditions
         with redis_distributed_lock(f'{user_id}:{cleaned_key}', ttl_seconds=15):
@@ -161,7 +161,7 @@ class OrderService:
         producer: EventProducer | None = None,
     ) -> Order:
 
-        with redis_distributed_lock(f'cancel"{order_id}', ttl_seconds=10):
+        with redis_distributed_lock(f'cancel:{order_id}', ttl_seconds=10):
             order = Order.objects.filter(id=order_id, user_id=user_id).first()
             if not order:
                 raise NotFound(f'Order not found.')
@@ -172,7 +172,7 @@ class OrderService:
 
 
             updated_order = cls.transition_order_status(
-                order_id==order_id,
+                order_id=order_id,
                 to_status=OrderStatus.CANCELLED,
                 reason=reason,
             )

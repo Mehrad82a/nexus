@@ -15,7 +15,7 @@ class RabbitMQTopology:
     def __init__(self, *, config: MessagingSettings | None = None) -> None:
         self._settings = config if config is not None else messaging_settings
 
-        if self._settings.inventory_queue == self._settings.dead_letter_queue:
+        if self._settings.order_queue == self._settings.dead_letter_queue:
             raise ValueError('The main queue and dead-letter queue must be different.')
 
 
@@ -72,7 +72,7 @@ class RabbitMQTopology:
         )
 
         channel.queue_declare(
-            queue=self._settings.inventory_queue,
+            queue=self._settings.order_queue,
             durable=True,
             exclusive=False,
             auto_delete=False,
@@ -84,7 +84,7 @@ class RabbitMQTopology:
 
         for routing_key in self._settings.subscribed_routing_keys:
             channel.queue_bind(
-                queue=self._settings.inventory_queue,
+                queue=self._settings.order_queue,
                 exchange=self._settings.event_exchange,
                 routing_key=routing_key,
             )
@@ -92,6 +92,6 @@ class RabbitMQTopology:
         logger.info(
             '[RabbitMQTopology] Event destination declared: '
             f'exchange=<{self._settings.event_exchange}> | '
-            f'queue=<{self._settings.inventory_queue}>'
+            f'queue=<{self._settings.order_queue}>'
         )
 

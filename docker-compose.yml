@@ -15,7 +15,8 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
+#      - ./scripts/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
+      - ./scripts/postgres/init-multi-db.sql:/docker-entrypoint-initdb.d/init-multi-db.sql:ro
 
     networks:
       - nexus_network
@@ -157,6 +158,55 @@ services:
 
     networks:
       - nexus_network
+
+
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+
+    container_name: ${ORDER_CONTAINER_NAME}
+    restart: unless-stopped
+
+    volumes:
+      - ./services/order-service:/app
+
+    environment:
+      ORDER_SECRET_KEY: ${ORDER_SECRET_KEY}
+      ORDER_DEBUG: ${ORDER_DEBUG}
+      ORDER_ALLOWED_HOSTS: ${ORDER_ALLOWED_HOSTS}
+      ORDER_DB_NAME: ${ORDER_DB_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    ports:
+      - "${ORDER_PORT}:8003"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
 
 
 volumes:
