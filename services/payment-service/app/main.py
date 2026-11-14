@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
+from app.api.routes import router
 from app.core.database import Base, sync_engin
 import app.models.payment
 
@@ -21,6 +22,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+app.include_router(router)
 
 
 @app.get('/health', tags=['health'])
