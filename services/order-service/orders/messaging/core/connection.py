@@ -78,17 +78,14 @@ class RabbitMQConnection:
         try:
             self.channel = connection.channel()
 
-
         except (pika.exceptions.AMQPError, OSError) as exc:
             self.close()
-
             logger.exception('[RabbitMQConnection] Failed to open channel.')
             raise RabbitMQConnectionError('Could not open a RabbitMQ channel.') from exc
 
 
         logger.info('[RabbitMQConnection] Channel opened.')
         return self.channel
-
 
 
     def close(self) -> None:
@@ -103,7 +100,6 @@ class RabbitMQConnection:
 
         try:
             connection.close()
-
         except (pika.exceptions.AMQPError, OSError):
             logger.warning('[RabbitMQConnection] Connection cleanup failed.', exc_info=True)
 
