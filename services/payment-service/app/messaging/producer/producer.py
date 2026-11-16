@@ -6,11 +6,11 @@ from datetime import datetime, timezone
 
 import pika
 
-from orders.messaging.core.config import MessagingSettings, messaging_settings
-from orders.messaging.core.connection import RabbitMQConnection
-from orders.messaging.services.exceptions import ProducerPublishError, RabbitMQConnectionError
-from orders.messaging.core.logger import get_logger
-from orders.messaging.core.topology import RabbitMQTopology
+from app.messaging.core.config import MessagingSettings, messaging_settings
+from app.messaging.core.connection import RabbitMQConnection
+from app.messaging.services.exceptions import ProducerPublishError, RabbitMQConnectionError
+from app.messaging.core.logger import get_logger
+from app.messaging.core.topology import RabbitMQTopology
 
 
 logger = get_logger(__name__)

@@ -13,27 +13,27 @@ class Base(DeclarativeBase):
 
 
 # Async Engine for FastAPI Endpoints
-async_engin = create_async_engine(
+async_engine = create_async_engine(
     settings.async_database_url,
     pool_pre_ping=True,
     echo=False,
 )
 
 AsyncSessionLocal = async_sessionmaker(
-    bind=async_engin,
+    bind=async_engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
 
 
 # Sync Engine for Pika RabbitMQ Worker & Table Initialization
-sync_engin = create_engine(
+sync_engine = create_engine(
     settings.sync_database_url,
     pool_pre_ping=True,
 )
 
 SyncSessionLocal = sessionmaker(
-    bind=sync_engin,
+    bind=sync_engine,
     autocommit=False,
     autoflush=False,
 )

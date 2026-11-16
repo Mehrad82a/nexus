@@ -68,6 +68,7 @@ class InventoryEventHandler:
         return result
 
 
+
     def _dispatch(
         self,
         *,

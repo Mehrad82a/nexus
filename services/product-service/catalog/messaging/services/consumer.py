@@ -67,10 +67,13 @@ class InventoryEventConsumer:
 
     def stop(self) -> None:
         """Stop consuming; start() will close the connection."""
+
         channel = self._channel
 
         if channel is not None and channel.is_open and channel.is_consuming:
             channel.stop_consuming()
+
+
 
     def _callback(
         self,

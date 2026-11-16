@@ -3,14 +3,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.routes import router
-from app.core.database import Base, sync_engin
+from app.core.database import Base, sync_engine
 import app.models.payment
 
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    Base.metadata.create_all(bind=sync_engin)
+    Base.metadata.create_all(bind=sync_engine)
     yield
 
 

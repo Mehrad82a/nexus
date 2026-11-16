@@ -70,9 +70,9 @@ class PaymentService:
             await session.refresh(payment)
 
             event_producer = producer if producer is not None else EventProducer()
-            if payment.status == PaymentService.SUCCEEDED:
+            if payment.status == PaymentStatus.SUCCEEDED:
                 event_producer.publish(
-                    event_type='payment_succeeded',
+                    event_type='payment.succeeded',
                     payload={
                         'payment_id': str(payment.id),
                         'order_id': str(payment.order_id),
@@ -138,6 +138,7 @@ class PaymentService:
 
             payment = Payment(
                 order_id=order_id,
+                user_id=user_id,
                 idempotency_key=cleaned_key,
                 amount=amount,
                 currency=currency,
