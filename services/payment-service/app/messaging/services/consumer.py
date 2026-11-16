@@ -52,12 +52,12 @@ class PaymentEventConsumer:
             channel.basic_qos(prefetch_count=self._settings.prefetch_count)
 
             channel.basic_consume(
-                queue=self._settings.inventory_queue,
+                queue=self._settings.payment_queue,
                 on_message_callback=self._callback,
                 auto_ack=False,
             )
 
-            logger.info(f'[PaymentEventConsumer] Waiting for events: queue=<{self._settings.inventory_queue}>')
+            logger.info(f'[PaymentEventConsumer] Waiting for events: queue=<{self._settings.payment_queue}>')
 
             channel.start_consuming()
 
