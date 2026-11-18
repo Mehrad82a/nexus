@@ -253,6 +253,38 @@ services:
 
 
 
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+
+    container_name: ${NOTIFICATION_CONTAINER_NAME}
+    restart: unless-stopped
+
+    volumes:
+      - ./services/notification-service:/app
+
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
 volumes:
   postgres_data:
   redis_data:
