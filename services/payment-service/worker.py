@@ -22,7 +22,7 @@ def main() -> int:
     signal.signal(signal.SIGINT, handle_shutdown)
     signal.signal(signal.SIGTERM, handle_shutdown)
 
-    logger.info('[worker] Starting inventory event consumer.')
+    logger.info('[worker] Starting payment event consumer.')
 
 
     try:
