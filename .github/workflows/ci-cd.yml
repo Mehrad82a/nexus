@@ -1,0 +1,138 @@
+name: NEXUS Microservices CI/CD Pipeline
+
+on:
+  push:
+    branches: ['main', 'development', 'backend']
+  pull_request:
+    branches: ['main', 'development']
+
+jobs:
+  test-and-verify:
+    name: Run Pytest Across All 5 Microservices
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nexus_admin
+          POSTGRES_PASSWORD: nexus_secret_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U nexus_admin -d postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Initialize Isolated PostgreSQL Databases
+        env:
+          PGPASSWORD: nexus_secret_password
+        run: |
+          psql -h localhost -U nexus_admin -d postgres -f scripts/postgres/init-multi-db.sql
+
+      - name: Install & Test Auth Service
+        working-directory: services/auth-service
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: nexus_admin
+          POSTGRES_PASSWORD: nexus_secret_password
+          REDIS_HOST: localhost
+          REDIS_PASSWORD: ''
+          AUTH_SECRET_KEY: ci-test-auth-secret-key
+          JWT_SECRET_KEY: ci-test-jwt-secret-key
+        run: |
+          pip install -r requirements.txt
+          pytest -v
+
+      - name: Install & Test Product Service
+        working-directory: services/product-service
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: nexus_admin
+          POSTGRES_PASSWORD: nexus_secret_password
+          REDIS_HOST: localhost
+          REDIS_PASSWORD: ''
+          PRODUCT_SECRET_KEY: ci-test-product-secret-key
+          JWT_SECRET_KEY: ci-test-jwt-secret-key
+        run: |
+          pip install -r requirements.txt
+          pytest -v
+
+      - name: Install & Test Order Service
+        working-directory: services/order-service
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: nexus_admin
+          POSTGRES_PASSWORD: nexus_secret_password
+          REDIS_HOST: localhost
+          REDIS_PASSWORD: ''
+          ORDER_SECRET_KEY: ci-test-order-secret-key
+          JWT_SECRET_KEY: ci-test-jwt-secret-key
+        run: |
+          pip install -r requirements.txt
+          pytest -v
+
+      - name: Install & Test Payment Service (FastAPI)
+        working-directory: services/payment-service
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: nexus_admin
+          POSTGRES_PASSWORD: nexus_secret_password
+          REDIS_HOST: localhost
+          REDIS_PASSWORD: ''
+          JWT_SECRET_KEY: ci-test-jwt-secret-key
+          PAYMENT_WEBHOOK_SECRET: ci-test-webhook-secret-key
+        run: |
+          pip install -r requirements.txt
+          pytest -v
+
+      - name: Install & Test Notification Worker Service
+        working-directory: services/notification-service
+        env:
+          REDIS_HOST: localhost
+          REDIS_PASSWORD: ''
+        run: |
+          pip install -r requirements.txt
+          pytest -v
+
+  build-docker-images:
+    name: Verify Docker Builds for Microservices
+    runs-on: ubuntu-latest
+    needs: test-and-verify
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - product-service
+          - order-service
+          - payment-service
+          - notification-service
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image for ${{ matrix.service }}
+        run: |
+          docker build -t nexus/${{ matrix.service }}:ci ./services/${{ matrix.service }}
