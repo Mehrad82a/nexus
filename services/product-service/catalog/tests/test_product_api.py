@@ -11,7 +11,7 @@ from unicodedata import category
 
 from catalog.messaging.services.handler import InventoryEventHandler
 from catalog.models import Brand, Category, Inventory, InventoryReservation, Product
-from catalog.services import CatalogService
+from catalog.service.services import CatalogService
 
 
 

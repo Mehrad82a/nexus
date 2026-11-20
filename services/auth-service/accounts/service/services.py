@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
 from accounts.models import User
-from accounts.selectors import get_user_by_email
+from accounts.service.selectors import get_user_by_email
 
 
 class AuthService:
