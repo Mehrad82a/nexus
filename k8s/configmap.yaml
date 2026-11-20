@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexus-config
+  namespace: nexus-production
+data:
+  POSTGRES_HOST: 'postgres-service'
+  POSTGRES_PORT: '5432'
+  POSTGRES_USER: 'nexus_admin'
+  AUTH_DB_NAME: 'nexus_auth_db'
+  PRODUCT_DB_NAME: 'nexus_product_db'
+  ORDER_DB_NAME: 'nexus_order_db'
+  PAYMENT_DB_NAME: 'nexus_payment_db'
+  REDIS_HOST: 'redis-service'
+  REDIS_PORT: '6379'
+  RABBITMQ_HOST: 'rabbitmq-service'
+  RABBITMQ_PORT: '5672'
+  RABBITMQ_DEFAULT_USER: 'admin_user'
+  AUTH_DEBUG: 'False'
+  PRODUCT_DEBUG: 'False'
+  ORDER_DEBUG: 'False'
+  PAYMENT_DEBUG: 'False'

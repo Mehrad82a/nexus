@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nexus-production
+  labels:
+    app.kubernetes.io/part-of: nexus-platform
+
+
+
