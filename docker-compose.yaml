@@ -1,0 +1,482 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_MULTIPLE_DATABASES}
+
+    ports:
+      - "${POSTGRES_PORT}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+#      - ./scripts/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
+      - ./scripts/postgres/init-multi-db.sql:/docker-entrypoint-initdb.d/init-multi-db.sql:ro
+
+    networks:
+      - nexus_network
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${REDIS_CONTAINER_NAME}
+    restart: unless-stopped
+
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+
+    ports:
+      - "${REDIS_PORT}:6379"
+
+    volumes:
+      - redis_data:/data
+    networks:
+      - nexus_network
+
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: ${RABBITMQ_CONTAINER_NAME}
+    restart: unless-stopped
+
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - nexus_network
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+
+    container_name: ${AUTH_CONTAINER_NAME}
+    restart: unless-stopped
+
+    environment:
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY}
+      AUTH_DEBUG: ${AUTH_DEBUG}
+      AUTH_ALLOWED_HOSTS: ${AUTH_ALLOWED_HOSTS}
+      AUTH_DB_NAME: ${AUTH_DB_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+
+    ports:
+      - "${AUTH_PORT}:8001"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    volumes:
+      - ./services/auth-service:/app
+    networks:
+      - nexus_network
+
+
+
+  product-service:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile
+
+    container_name: ${PRODUCT_CONTAINER_NAME}
+    restart: unless-stopped
+
+    volumes:
+      - ./services/product-service:/app
+
+    environment:
+      PRODUCT_SECRET_KEY: ${PRODUCT_SECRET_KEY}
+      PRODUCT_DEBUG: ${PRODUCT_DEBUG}
+      PRODUCT_ALLOWED_HOSTS: ${PRODUCT_ALLOWED_HOSTS}
+      PRODUCT_DB_NAME: ${PRODUCT_DB_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    ports:
+      - "${PRODUCT_PORT}:8002"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+
+    container_name: ${ORDER_CONTAINER_NAME}
+    restart: unless-stopped
+
+    volumes:
+      - ./services/order-service:/app
+
+    environment:
+      ORDER_SECRET_KEY: ${ORDER_SECRET_KEY}
+      ORDER_DEBUG: ${ORDER_DEBUG}
+      ORDER_ALLOWED_HOSTS: ${ORDER_ALLOWED_HOSTS}
+      ORDER_DB_NAME: ${ORDER_DB_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    ports:
+      - "${ORDER_PORT}:8003"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+
+    container_name: ${PAYMENT_CONTAINER_NAME}
+    restart: unless-stopped
+
+    volumes:
+      - ./services/payment-service:/app
+
+    environment:
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET}
+      PAYMENT_DEBUG: ${PAYMENT_DEBUG}
+      PAYMENT_DB_NAME: ${PAYMENT_DB_NAME}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    ports:
+      - "${PAYMENT_PORT}:8004"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+
+    container_name: ${NOTIFICATION_CONTAINER_NAME}
+    restart: unless-stopped
+
+    volumes:
+      - ./services/notification-service:/app
+
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
+  product-worker:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile
+
+    container_name: ${PRODUCT_WORKER_CONTAINER_NAME:-ProductWorker}
+    restart: unless-stopped
+    command: python worker.py
+
+    volumes:
+      - ./services/product-service:/app
+
+    environment:
+      PRODUCT_SECRET_KEY: ${PRODUCT_SECRET_KEY}
+      PRODUCT_DEBUG: ${PRODUCT_DEBUG}
+      PRODUCT_DB_NAME: ${PRODUCT_DB_NAME}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
+  order-worker:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+
+    container_name: ${ORDER_WORKER_CONTAINER_NAME:-OrderWorker}
+    restart: unless-stopped
+    command: python worker.py
+
+    volumes:
+      - ./services/order-service:/app
+
+    environment:
+      ORDER_SECRET_KEY: ${ORDER_SECRET_KEY}
+      ORDER_DEBUG: ${ORDER_DEBUG}
+      ORDER_DB_NAME: ${ORDER_DB_NAME}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
+
+  payment-worker:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+
+    container_name: ${PAYMENT_WORKER_CONTAINER_NAME:-PaymentWorker}
+    restart: unless-stopped
+    command: python worker.py
+
+    volumes:
+      - ./services/payment-service:/app
+
+    environment:
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET}
+      PAYMENT_DEBUG: ${PAYMENT_DEBUG}
+      PAYMENT_DB_NAME: ${PAYMENT_DB_NAME}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - nexus_network
+
+
+
+  api-gateway:
+    image: docker.arvancloud.ir/library/nginx:1.27-alpine
+    container_name: ${GATEWAY_CONTAINER_NAME:-ApiGateway}
+    restart: unless-stopped
+
+    ports:
+      - "${GATEWAY_PORT:-8080}:80"
+
+    volumes:
+      - ./scripts/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - payment-service
+
+    networks:
+      - nexus_network
+
+
+
+  prometheus:
+    image: docker.arvancloud.ir/prom/prometheus:v2.54.1
+    container_name: ${PROMETHEUS_CONTAINER_NAME:-Prometheus}
+    restart: unless-stopped
+
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+    networks:
+      - nexus_network
+
+
+
+  grafana:
+    image: docker.arvancloud.ir/grafana/grafana:11.2.0
+    container_name: ${GRAFANA_CONTAINER_NAME:-Grafana}
+    restart: unless-stopped
+
+    ports:
+      - "${GRAFANA_PORT}:3000"
+
+    volumes:
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - grafana_data:/var/lib/grafana
+
+    depends_on:
+      - prometheus
+
+    networks:
+      - nexus_network
+
+
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
+
+
+
+networks:
+  nexus_network:
+    driver: bridge

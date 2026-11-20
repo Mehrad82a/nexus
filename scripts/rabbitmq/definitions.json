@@ -1,0 +1,19 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "nexus-dead-letter-policy",
+      "pattern": "^nexus\\..*\\.queue$",
+      "apply-to": "queues",
+      "definition": {
+        "dead-letter-exchange": "nexus.dlx"
+      },
+      "priority": 10
+    }
+  ]
+}

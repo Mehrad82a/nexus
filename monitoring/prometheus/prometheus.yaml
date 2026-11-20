@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'nexus-distributed-platform'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'rabbitmq-broker'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
+  - job_name: 'nexus-microservices'
+    metrics_path: '/health'
+    static_configs:
+      - targets:
+          - 'api-gateway:80'
+          - 'auth-service:8001'
+          - 'product-service:8002'
+          - 'order-service:8003'
+          - 'payment-service:8004'
