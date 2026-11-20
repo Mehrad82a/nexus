@@ -23,7 +23,7 @@ from catalog.serializers import (
     ProductOutputSerializer,
     ReserveStockInputSerializer,
 )
-from catalog.services import CatalogService, InventoryService
+from catalog.service.services import CatalogService, InventoryService
 
 
 

@@ -11,7 +11,7 @@ from unicodedata import category
 
 from catalog.messaging.services.handler import InventoryEventHandler
 from catalog.models import Brand, Category, Inventory, InventoryReservation, Product
-from catalog.services import CatalogService
+from catalog.service.services import CatalogService
 
 
 
@@ -131,7 +131,7 @@ class TestProductServiceAndPerformance:
     def test_inventory_saga_reserve_and_rollback_on_payment_failed(self, sample_catalog):
         cache.clear()
         product: Product = sample_catalog['product']
-        variant = product.variants.first()
+        variant = product.variants.get(sku='IP16P-256-BLK')
         order_id = uuid.uuid4()
 
         mock_producer = MagicMock()
